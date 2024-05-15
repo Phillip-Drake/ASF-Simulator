@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+    <div>
+        Original Staple Set
+        <input type="file" name="inputfile" id="inputfile">
+    </div>
+    <div>
+        Secondary Staple Set
+        <input type="file" name="inputfile2" id="inputfile2">
+    </div>
+    <canvas id="simulationWindow" width="5000" height="2000">
+
+    </canvas>
+</body>
+
+
+</html>
+
+
+
+
+<script>
+    const canvas = document.getElementById("simulationWindow")
+    const ctx = canvas.getContext("2d")
+
+    let circle = {
+        x: 1000,
+        y: 1000,
+        radius: 800
+    }
+
+
+
+
+
+    class Points {
+        constructor(points, arcs) {
+            this.points = points
+            this.drawnPoints = []
+            this.arcs = arcs
+            this.drawnArcs = []
+            this.processPoints()
+            this.processArcs()
+        }
+        updateArcs(arcs){
+            this.arcs = arcs
+            this.processArcs()
+            this.draw()
+        }
+
+        draw() {
+            ctx.beginPath()
+            ctx.strokeStyle = 'black'
+            ctx.lineWidth = 4
+            ctx.strokeStyle = 'black'
+            ctx.arc(circle.x, circle.y, circle.radius, 0, 2*Math.PI)
+            ctx.lineWidth = 2
+            for(let i=0; i<this.drawnPoints.length;i++){
+                console.log(this.drawnPoints[i])
+                ctx.fillText(this.drawnPoints[i].text, this.drawnPoints[i].drawX, this.drawnPoints[i].drawY)
+                ctx.moveTo(this.drawnPoints[i].drawX-5, this.drawnPoints[i].drawY)
+                ctx.lineTo(this.drawnPoints[i].x-5, this.drawnPoints[i].y)
+            }
+            ctx.stroke()
+            ctx.closePath()
+            console.log(this.drawnArcs.length)
+            ctx.lineWidth = 2
+            for(let i=0; i < this.drawnArcs.length; i++){
+                ctx.beginPath()
+                ctx.strokeStyle = this.drawnArcs[i].color
+                let xDiff = Math.abs(this.drawnArcs[i].x1 - this.drawnArcs[i].x2)
+                let yDiff = Math.abs(this.drawnArcs[i].y1 - this.drawnArcs[i].y2)
+                let xCenter = (this.drawnArcs[i].x1 + this.drawnArcs[i].x2) / 2
+                let yCenter = (this.drawnArcs[i].y1 + this.drawnArcs[i].y2) / 2
+                let distFromPoint = Math.sqrt((circle.x - xCenter) * (circle.x - xCenter) + (circle.y - yCenter)*(circle.y - yCenter))
+                let bezierX = xCenter + (circle.x - xCenter)*(xDiff/(circle.radius*2))
+                let bezierY = yCenter + (circle.y - yCenter) * (yDiff/(circle.radius*2))
+                //ctx.moveTo(xCenter + distFromPoint, yCenter)
+                //ctx.arc(xCenter, yCenter, distFromPoint, 0, 2*Math.PI)
+                //let xDiff = (Math.abs(((this.drawnArcs[i].x1 + this.drawnArcs[i].x2) / 2) - circle.x)) * (Math.abs(this.drawnArcs[i].x1 - this.drawnArcs[i].x2) / (circle.radius*2)) * 50
+                //let yDiff = (Math.abs(((this.drawnArcs[i].y1 + this.drawnArcs[i].y2) / 2) - circle.y))/2* (Math.abs(this.drawnArcs[i].y1 - this.drawnArcs[i].y2) / (circle.radius*2)) * 50
+                //let bezierX = ((this.drawnArcs[i].x1 + this.drawnArcs[i].x2) / 2) - xDiff
+                //let bezierY = ((this.drawnArcs[i].y1 + this.drawnArcs[i].y2) / 2) - yDiff
+                ctx.moveTo(this.drawnArcs[i].x1, this.drawnArcs[i].y1)
+                ctx.bezierCurveTo(bezierX, bezierY, bezierX, bezierY, this.drawnArcs[i].x2, this.drawnArcs[i].y2)
+                ctx.stroke()
+                ctx.closePath()
+            }
+
+            
+        }
+
+        processPoints() {
+            this.drawnPoints = []
+            for(let i = 0; i < this.points.length; i++){
+                this.drawnPoints.push({
+                    x: circle.x + (Math.cos(((2*Math.PI) / this.points.length) * i+1) * (circle.radius)),
+                    y: circle.y + (Math.sin(((2*Math.PI) / this.points.length) * i+1) * (circle.radius)),
+                    drawX: circle.x + (Math.cos(((2*Math.PI) / this.points.length) * i+1) * (circle.radius+ (i % 2 == 0 ? 50 : 100))),
+                    drawY: circle.y + (Math.sin(((2*Math.PI) / this.points.length) * i+1) * (circle.radius+ (i % 2 == 0 ? 50 : 100))),
+                    text: this.points[i]
+                })
+            }
+        }
+
+        processArcs() {
+            this.drawnArcs = []
+            for(let i = 0; i < this.arcs.length; i++) {
+                let x1 = 0
+                let y1 = 0
+                let x2 = 0
+                let y2 = 0
+                let radius = 0
+                let rotation = 0
+                for(let j = 0; j < this.drawnPoints.length; j++){
+                    //console.log(this.drawnPoints[j].text + " " + this.arcs[i].point1)
+                    if(this.drawnPoints[j].text == this.arcs[i].point1){
+                        x1 = this.drawnPoints[j].x
+                        y1 = this.drawnPoints[j].y
+                        
+                        
+                    }
+                    if(this.drawnPoints[j].text == this.arcs[i].point2){
+                        x2 = this.drawnPoints[j].x
+                        y2 = this.drawnPoints[j].y
+                           
+                    }
+                    console.log(x1)
+                }
+                console.log(x1)
+                if(x1 != 0){
+                    this.drawnArcs.push({
+                    x1: x1,
+                    y1: y1,
+                    x2: x2,
+                    y2: y2,
+                    radius: radius,
+                    rotation: 40,
+                    color: this.arcs[i].color
+                    })
+                }
+            }
+        }
+    }
+    let testPoints = []
+    for(let i = 1; i < 193; i++){  
+        testPoints.push(i.toString())
+    }
+    let arcs = []
+    //for(let i = 5; i < 80; i+= 3){
+    //    arcs.push({
+    //        point1: i.toString(),
+    //        point2: (200-i).toString(),
+    //        color: i % 2 == 0 ?'red' : 'blue'
+    //    })
+    //}
+    let points = new Points(testPoints, arcs)
+    points.draw()
+
+    function processFile(input, inputType){
+        let inputPoints = input.split(" ").join('\n').split('\n')
+        console.log(inputPoints)
+        for(let i = 0; i < inputPoints.length; i+= 2){
+            arcs.push({
+                point1: inputPoints[i],
+                point2: inputPoints[i+1],
+                color: inputType
+            })
+        }
+        console.log(arcs)
+        points.updateArcs(arcs)
+        points.draw()
+    }
+    document.getElementById('inputfile').addEventListener('change', function () {
+        let fr = new FileReader()
+        
+        fr.addEventListener('load', (event) => {
+            processFile(fr.result, 'green')
+        })
+        fr.readAsBinaryString(event.target.files[0])
+    })
+    document.getElementById('inputfile2').addEventListener('change', function () {
+        let fr = new FileReader()
+        
+        fr.addEventListener('load', (event) => {
+            processFile(fr.result, 'red')
+        })
+        fr.readAsBinaryString(event.target.files[0])
+    })
+</script>

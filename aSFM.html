@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body oncontextmenu="return false;">
+    <button onclick="translateUp()">
+        Shift up
+    </button>
+    <button onclick="translateRight()">
+        Shift right
+    </button>
+    <button onclick="translateDown()">
+        Shift down
+    </button>
+    <button onclick="translateLeft()">
+        Shift left
+    </button>
+    Display Scaffold
+    <input type="checkbox" id="viewScaffold" name="scaffoldView" value="scaffold">
+    <canvas id="simulationWindow" width="5000" height="1000">
+
+    </canvas>
+</body>
+
+
+</html>
+
+<script>
+    const canvas = document.getElementById("simulationWindow")
+    const ctx = canvas.getContext("2d")
+
+    
+
+    
+
+    const numTiles = 48
+
+    const tileWidth = 75
+
+    let viewScaffold = document.getElementById('viewScaffold')
+
+    class Tile {
+        draw(){
+
+            ctx.beginPath();
+            ctx.lineWidth = 4
+            ctx.arc(this.pivot_x, this.pivot_y, 5, 0, 2 * Math.PI)
+            ctx.lineWidth = 2
+            if(viewScaffold.checked){
+                console.log(this.arc.start_x + " " + this.arc.start_y)
+                ctx.moveTo(this.arc.start_x, this.arc.start_y)
+                ctx.lineTo(this.arc.end_x, this.arc.end_y)
+            }
+            ctx.rect(this.x - (tileWidth / 2),this.y - (tileWidth / 2),tileWidth,tileWidth)
+            ctx.fillText(((this.num-1)*4+1).toString(), this.topLabel.x, this.topLabel.y)
+            ctx.fillText(((this.num-1)*4+2).toString(), this.rightLabel.x, this.rightLabel.y)
+            ctx.fillText(((this.num-1)*4+3).toString(), this.bottomLabel.x, this.bottomLabel.y)
+            ctx.fillText(((this.num-1)*4+4).toString(), this.leftLabel.x, this.leftLabel.y)
+            ctx.stroke()
+            ctx.closePath()
+        }
+        constructor(num) {
+            this.num = num
+            this.x = num * tileWidth + num*3 + (tileWidth / 2)
+            this.y = tileWidth / 2 + 100
+            this.topLabel = {
+                x: this.x,
+                y: this.y-20
+            }
+            this.rightLabel = {
+                x: this.x+20,
+                y: this.y
+            }
+            this.bottomLabel = {
+                x: this.x,
+                y: this.y+20
+            }
+            this.leftLabel= {
+                x: this.x-20,
+                y: this.y
+            }
+            this.setObjectCoords()
+            this.draw()
+
+        }
+        setObjectCoords(){
+            if(this.num % 2 == 0){
+                this.direction = 'clockwise'
+                this.pivot_x = this.x + tileWidth/2
+                this.pivot_y = this.y + tileWidth/2
+                this.arc = {
+                    start_x: this.pivot_x,
+                    start_y : this.pivot_y - 10,
+                    end_x : this.x - tileWidth/2,
+                    end_y : this.y - tileWidth/2 + 10
+                }
+                this.arc_x = this.x - tileWidth/2 + 5
+                this.arc_y = this.y - tileWidth/2 + 5
+            } else{
+                this.direction = 'counterclockwise'
+                this.pivot_x = this.x + tileWidth/2
+                this.pivot_y = this.y - tileWidth/2
+                this.arc = {
+                    start_x: this.pivot_x,
+                    start_y : this.pivot_y + 10,
+                    end_x : this.x - tileWidth/2,
+                    end_y : this.y + tileWidth/2 - 10
+                }
+
+            }
+        }
+        pivot(){
+            ctx.clearRect(0,0,10000,10000)
+            this.x = 150
+            drawTiles()
+            
+        }
+
+        rotateClockwise(pivot_x, pivot_y) {
+            let xDiff = this.x - pivot_x
+            let yDiff = this.y - pivot_y
+            let temp = xDiff
+            xDiff = yDiff * -1
+            yDiff = temp
+            this.x = pivot_x + xDiff
+            this.y = pivot_y + yDiff
+
+            xDiff = this.pivot_x - pivot_x
+            yDiff = this.pivot_y - pivot_y
+            temp = xDiff
+            xDiff = yDiff * -1
+            yDiff = temp
+            this.pivot_x = pivot_x  + xDiff
+            this.pivot_y = pivot_y + yDiff
+
+            xDiff = this.topLabel.x - pivot_x
+            yDiff = this.topLabel.y - pivot_y
+            temp = xDiff
+            xDiff = yDiff * -1
+            yDiff = temp
+            this.topLabel.x = pivot_x + xDiff
+            this.topLabel.y = pivot_y + yDiff
+
+            xDiff = this.rightLabel.x - pivot_x
+            yDiff = this.rightLabel.y - pivot_y
+            temp = xDiff
+            xDiff = yDiff * -1
+            yDiff = temp
+            this.rightLabel.x = pivot_x + xDiff
+            this.rightLabel.y = pivot_y + yDiff
+
+            xDiff = this.bottomLabel.x - pivot_x
+            yDiff = this.bottomLabel.y - pivot_y
+            temp = xDiff
+            xDiff = yDiff * -1
+            yDiff = temp
+            this.bottomLabel.x = pivot_x + xDiff
+            this.bottomLabel.y = pivot_y + yDiff
+
+            xDiff = this.leftLabel.x - pivot_x
+            yDiff = this.leftLabel.y - pivot_y
+            temp = xDiff
+            xDiff = yDiff * -1
+            yDiff = temp
+            this.leftLabel.x = pivot_x + xDiff
+            this.leftLabel.y = pivot_y + yDiff
+
+            xDiff = this.arc.start_x - pivot_x
+            yDiff = this.arc.start_y - pivot_y
+            temp = xDiff
+            xDiff = yDiff * -1
+            yDiff = temp
+            this.arc.start_x = pivot_x + xDiff
+            this.arc.start_y = pivot_y + yDiff
+            
+            xDiff = this.arc.end_x - pivot_x
+            yDiff = this.arc.end_y - pivot_y
+            temp = xDiff
+            xDiff = yDiff * -1
+            yDiff = temp
+            this.arc.end_x = pivot_x + xDiff
+            this.arc.end_y = pivot_y + yDiff
+        }
+        rotateCounterClockwise(pivot_x, pivot_y) {
+            let xDiff = this.x - pivot_x
+            let yDiff = this.y - pivot_y
+            let temp = xDiff
+            xDiff = yDiff
+            yDiff = temp * -1
+            this.x = pivot_x + xDiff
+            this.y = pivot_y + yDiff
+
+            xDiff = this.pivot_x - pivot_x
+            yDiff = this.pivot_y - pivot_y
+            temp = xDiff
+            xDiff = yDiff
+            yDiff = temp * -1
+            this.pivot_x = pivot_x  + xDiff
+            this.pivot_y = pivot_y + yDiff
+
+            xDiff = this.topLabel.x - pivot_x
+            yDiff = this.topLabel.y - pivot_y
+            temp = xDiff * -1
+            xDiff = yDiff
+            yDiff = temp
+            this.topLabel.x = pivot_x + xDiff
+            this.topLabel.y = pivot_y + yDiff
+
+            xDiff = this.rightLabel.x - pivot_x
+            yDiff = this.rightLabel.y - pivot_y
+            temp = xDiff * -1
+            xDiff = yDiff
+            yDiff = temp
+            this.rightLabel.x = pivot_x + xDiff
+            this.rightLabel.y = pivot_y + yDiff
+
+            xDiff = this.bottomLabel.x - pivot_x
+            yDiff = this.bottomLabel.y - pivot_y
+            temp = xDiff * -1
+            xDiff = yDiff
+            yDiff = temp
+            this.bottomLabel.x = pivot_x + xDiff
+            this.bottomLabel.y = pivot_y + yDiff
+
+            xDiff = this.leftLabel.x - pivot_x
+            yDiff = this.leftLabel.y - pivot_y
+            temp = xDiff * -1
+            xDiff = yDiff
+            yDiff = temp
+            this.leftLabel.x = pivot_x + xDiff
+            this.leftLabel.y = pivot_y + yDiff
+
+            xDiff = this.arc.start_x - pivot_x
+            yDiff = this.arc.start_y - pivot_y
+            temp = xDiff * -1
+            xDiff = yDiff
+            yDiff = temp
+            this.arc.start_x = pivot_x + xDiff
+            this.arc.start_y = pivot_y + yDiff
+            
+            xDiff = this.arc.end_x - pivot_x
+            yDiff = this.arc.end_y - pivot_y
+            temp = xDiff * -1
+            xDiff = yDiff
+            yDiff = temp
+            this.arc.end_x = pivot_x + xDiff
+            this.arc.end_y = pivot_y + yDiff
+        }
+
+        
+    }
+
+    let tiles = []
+    for(i = 1; i<=numTiles;i++){
+        tiles.push(new Tile(i))
+    }
+
+    function drawTiles(){
+        for(i = 0; i < tiles.length; i++){
+            tiles[i].draw()
+        }
+    }
+
+
+
+    document.addEventListener('click', checkPivot, true);
+    document.addEventListener('contextmenu', checkPivotBack, true)
+    function checkPivot(){
+        foundClick = false
+        var e = window.event;
+        var clickX = e.pageX + translation.x
+        var clickY = e.pageY + translation.y
+        direction = null
+        for(i = 0; i < tiles.length; i++){
+            if(!foundClick){
+                if(clickX > tiles[i].x-tileWidth/2 && clickX < tiles[i].x-tileWidth/2 + tileWidth && clickY > tiles[i].y-tileWidth/2 && clickY < tiles[i].y + tileWidth-tileWidth/2){
+                    foundClick = true
+                    direction = tiles[i].direction
+                    pivot_x = tiles[i].pivot_x
+                    pivot_y = tiles[i].pivot_y
+                    console.log("detected")
+                }
+            }
+            else{
+                if(direction == 'clockwise'){
+                    tiles[i].rotateClockwise(pivot_x, pivot_y)
+                }
+                else {
+                    tiles[i].rotateCounterClockwise(pivot_x, pivot_y)
+                }
+            }
+        }
+        if(foundClick){
+            ctx.clearRect(-1000000,-1000000,canvas.width + 10000000,canvas.height + 10000000)
+            drawTiles()
+        }
+    }
+    function checkPivotBack(){
+        foundClick = {
+            found:false,
+            tile:0
+        }
+        var e = window.event;
+        var clickX = e.pageX + translation.x
+        var clickY = e.pageY + translation.y
+        direction = null
+        for(i = tiles.length-1; i >= 0; i--){
+            if(!foundClick.found){
+                if(clickX > tiles[i].x-tileWidth/2 && clickX < tiles[i].x-tileWidth/2 + tileWidth && clickY > tiles[i].y-tileWidth/2 && clickY < tiles[i].y + tileWidth-tileWidth/2){
+                    foundClick.found = true
+                    direction = tiles[i].direction
+                    pivot_x = tiles[i-1].pivot_x
+                    pivot_y = tiles[i-1].pivot_y
+                    foundClick.tile = i
+                    console.log("detected")
+                }
+            }
+        }
+        if(foundClick){
+            for(i = foundClick.tile - 1; i >= 0; i--){
+                if(direction == 'clockwise'){
+                    tiles[i].rotateClockwise(pivot_x, pivot_y)
+                }
+                else {
+                    tiles[i].rotateCounterClockwise(pivot_x, pivot_y)
+                }
+            }
+
+
+            ctx.clearRect(-1000000,-1000000,canvas.width + 10000000,canvas.height + 10000000)
+            drawTiles()
+        }
+    }
+
+    var translation = {
+        x: 0,
+        y: 0
+    }
+    function translateUp(){
+        console.log("called")
+        ctx.translate(0,-50)
+        translation.y += 50
+        ctx.clearRect(-1000000,-1000000,canvas.width + 1000000,canvas.height + 1000000)
+        drawTiles()
+    }
+    function translateRight(){
+        ctx.translate(50,0)
+        translation.x -= 50
+        ctx.clearRect(-1000000,-1000000,canvas.width + 1000000,canvas.height + 1000000)
+        drawTiles()
+    }
+    function translateDown(){
+        ctx.translate(0,50)
+        translation.y -= 50
+        ctx.clearRect(-1000000,-1000000,canvas.width + 1000000,canvas.height + 1000000)
+        drawTiles()
+    }
+    function translateLeft(){
+        ctx.translate(-50,0)
+        translation.x += 50
+        ctx.clearRect(-1000000,-1000000,canvas.width+ 1000000,canvas.height+ 1000000)
+        drawTiles()
+    }
+</script>
