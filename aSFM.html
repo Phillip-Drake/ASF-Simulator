@@ -19,7 +19,9 @@
         Shift left
     </button>
     Display Scaffold
-    <input type="checkbox" id="viewScaffold" name="scaffoldView" value="scaffold">
+    <input type="checkbox" id="viewScaffold" name="scaffoldView" value="scaffold" onchange="toggleDisplayScaffold()">
+    Input Length of Scaffold : 
+    <input type="number" id="scaffoldLength" name="scaffoldLength" onchange="setTiles()" max="5000">
     <canvas id="simulationWindow" width="5000" height="1000">
 
     </canvas>
@@ -31,12 +33,12 @@
 <script>
     const canvas = document.getElementById("simulationWindow")
     const ctx = canvas.getContext("2d")
-
+    const scaffoldLengthInput = document.getElementById('scaffoldLength')
     
 
     
 
-    const numTiles = 48
+    let numTiles = 48
 
     const tileWidth = 75
 
@@ -50,20 +52,89 @@
             ctx.arc(this.pivot_x, this.pivot_y, 5, 0, 2 * Math.PI)
             ctx.lineWidth = 2
             if(viewScaffold.checked){
-                console.log(this.arc.start_x + " " + this.arc.start_y)
-                ctx.moveTo(this.arc.start_x, this.arc.start_y)
-                ctx.lineTo(this.arc.end_x, this.arc.end_y)
+                //if-then city :(
+
+
+
+                if(this.pivotPosNext == 2 || this.pivotPosNext == -2) {
+                    if(this.direction == 'clockwise'){
+                        if(this.pivotPos == 2 || this.pivotPos == -2){
+                            if(this.rotation == 0){
+                                ctx.moveTo(this.arc.start_x-10, this.arc.start_y+10)
+                            }
+                            else {
+                                ctx.moveTo(this.arc.start_x+10, this.arc.start_y-10)
+                            }
+                        }
+                        else {
+                            if(this.rotation == -2 || this.rotation == 2) {
+                                ctx.moveTo(this.arc.start_x+10, this.arc.start_y-10)
+                            }
+                            else { 
+                                ctx.moveTo(this.arc.start_x-10, this.arc.start_y+10)
+                            }
+                        }
+                        
+                    }
+                    else {
+                        if(this.pivotPos == 2 || this.pivotPos == -2){
+                            if(this.rotation == 0) {
+                                ctx.moveTo(this.arc.start_x - 10, this.arc.start_y - 10)
+                            } else {
+                                ctx.moveTo(this.arc.start_x+10, this.arc.start_y+10)
+                            }
+                        }
+                        else{
+                            if(this.rotation == -2 || this.rotation == 2){
+                                ctx.moveTo(this.arc.start_x+10, this.arc.start_y+10)
+                            }
+                            else {
+                                ctx.moveTo(this.arc.start_x-10, this.arc.start_y-10)
+                            }
+                            
+                        }
+                    }
+                    
+                }
+                else{
+                    ctx.moveTo(this.arc.start_x, this.arc.start_y)
+                }
+                if(this.pivotPos == 2 || this.pivotPos == -2){
+                    if(this.direction == 'clockwise'){
+                        if(this.rotation == 0) {
+                            ctx.lineTo(this.arc.end_x + 10, this.arc.end_y - 10)
+                        }
+                        else {
+                            ctx.lineTo(this.arc.end_x-10, this.arc.end_y+10)
+                        }
+                        
+                    } else { 
+                        if(this.rotation == 0) {
+                            ctx.lineTo(this.arc.end_x+10, this.arc.end_y+10)
+                        }
+                        else {
+                            ctx.lineTo(this.arc.end_x-10, this.arc.end_y-10)
+                        }
+                    }
+                }
+                else{
+                    ctx.lineTo(this.arc.end_x, this.arc.end_y)
+                }
             }
             ctx.rect(this.x - (tileWidth / 2),this.y - (tileWidth / 2),tileWidth,tileWidth)
-            ctx.fillText(((this.num-1)*4+1).toString(), this.topLabel.x, this.topLabel.y)
-            ctx.fillText(((this.num-1)*4+2).toString(), this.rightLabel.x, this.rightLabel.y)
-            ctx.fillText(((this.num-1)*4+3).toString(), this.bottomLabel.x, this.bottomLabel.y)
-            ctx.fillText(((this.num-1)*4+4).toString(), this.leftLabel.x, this.leftLabel.y)
+                ctx.fillText(((this.num-1)*4+3).toString(), this.topLabel.x, this.topLabel.y)
+                ctx.fillText(((this.num-1)*4+4).toString(), this.rightLabel.x, this.rightLabel.y)
+                ctx.fillText(((this.num-1)*4+2).toString(), this.bottomLabel.x, this.bottomLabel.y)
+                ctx.fillText(((this.num-1)*4+1).toString(), this.leftLabel.x, this.leftLabel.y)
+
             ctx.stroke()
             ctx.closePath()
         }
         constructor(num) {
             this.num = num
+            this.pivotPos = 0
+            this.pivotPosNext = 0
+            this.rotation = 0
             this.x = num * tileWidth + num*3 + (tileWidth / 2)
             this.y = tileWidth / 2 + 100
             this.topLabel = {
@@ -116,10 +187,13 @@
             ctx.clearRect(0,0,10000,10000)
             this.x = 150
             drawTiles()
-            
+            this.pivotPos++
+            this.pivotPos %= 3
         }
 
         rotateClockwise(pivot_x, pivot_y) {
+            this.rotation += 1
+            this.rotation %= 4
             let xDiff = this.x - pivot_x
             let yDiff = this.y - pivot_y
             let temp = xDiff
@@ -185,6 +259,8 @@
             this.arc.end_y = pivot_y + yDiff
         }
         rotateCounterClockwise(pivot_x, pivot_y) {
+            this.rotation += 1
+            this.rotation %= 4
             let xDiff = this.x - pivot_x
             let yDiff = this.y - pivot_y
             let temp = xDiff
@@ -252,18 +328,29 @@
 
         
     }
-
+    
+    function setTiles(){
+        ctx.clearRect(-1000000,-1000000,canvas.width+ 1000000,canvas.height+ 1000000)
+        tiles = []
+        for(i = 1; i <= scaffoldLengthInput.value; i++){
+            tiles.push(new Tile(i))
+        }
+    }
     let tiles = []
     for(i = 1; i<=numTiles;i++){
         tiles.push(new Tile(i))
     }
-
+    
     function drawTiles(){
         for(i = 0; i < tiles.length; i++){
             tiles[i].draw()
+            console.log("tile: " + tiles[i].num + " pivotPos: " + tiles[i].pivotPos + " pivotPosNext: " + tiles[i].pivotPosNext + " rotation: " + tiles[i].rotation)
         }
     }
-
+    function toggleDisplayScaffold(){
+        ctx.clearRect(-1000000,-1000000,canvas.width+ 1000000,canvas.height+ 1000000)
+        drawTiles()
+    }
 
 
     document.addEventListener('click', checkPivot, true);
@@ -281,14 +368,19 @@
                     direction = tiles[i].direction
                     pivot_x = tiles[i].pivot_x
                     pivot_y = tiles[i].pivot_y
-                    console.log("detected")
+                    tiles[i].pivotPosNext+= 2
+                    tiles[i].pivotPosNext %= 4
+                    tiles[i+1].pivotPos+= 2
+                    tiles[i+1].pivotPos %= 4
                 }
             }
             else{
                 if(direction == 'clockwise'){
                     tiles[i].rotateClockwise(pivot_x, pivot_y)
+                    tiles[i].rotateClockwise(pivot_x, pivot_y)
                 }
                 else {
+                    tiles[i].rotateCounterClockwise(pivot_x, pivot_y)
                     tiles[i].rotateCounterClockwise(pivot_x, pivot_y)
                 }
             }
@@ -315,7 +407,10 @@
                     pivot_x = tiles[i-1].pivot_x
                     pivot_y = tiles[i-1].pivot_y
                     foundClick.tile = i
-                    console.log("detected")
+                    tiles[i-1].pivotPosNext+=2
+                    tiles[i-1].pivotPosNext %= 4
+                    tiles[i].pivotPos+=2
+                    tiles[i].pivotPos %= 4
                 }
             }
         }
@@ -323,8 +418,10 @@
             for(i = foundClick.tile - 1; i >= 0; i--){
                 if(direction == 'clockwise'){
                     tiles[i].rotateClockwise(pivot_x, pivot_y)
+                    tiles[i].rotateClockwise(pivot_x, pivot_y)
                 }
                 else {
+                    tiles[i].rotateCounterClockwise(pivot_x, pivot_y)
                     tiles[i].rotateCounterClockwise(pivot_x, pivot_y)
                 }
             }
@@ -340,7 +437,6 @@
         y: 0
     }
     function translateUp(){
-        console.log("called")
         ctx.translate(0,-50)
         translation.y += 50
         ctx.clearRect(-1000000,-1000000,canvas.width + 1000000,canvas.height + 1000000)
